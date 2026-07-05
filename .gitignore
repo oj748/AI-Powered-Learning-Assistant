@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+
+#data
+data/
+
+# AI model files
+*.gguf
+*.safetensors
+*.bin
+*.onnx
+
+# Local model directories
+models/
+
+# Local databases and user data
+*.db
+*.sqlite
+*.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Build / packaging output
+build/
+dist/
+*.egg-info/

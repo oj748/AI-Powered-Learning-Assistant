@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Markdown Viewer</title>
+
+<!-- ============================= -->
+<!-- Markdown-It                   -->
+<!-- ============================= -->
+
+<script src="markdown-it.min.js"></script>
+<script>
+
+console.log("markdownit =", typeof markdownit);
+
+</script>
+<!-- ============================= -->
+<!-- MathJax                       -->
+<!-- ============================= -->
+
+<script>
+
+MathJax = {
+    tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$']]
+    },
+    startup: {
+        typeset: false
+    }
+};
+
+</script>
+
+<script async
+src="../mathjax/es5/tex-mml-chtml.js">
+</script>
+
+<style>
+
+html{
+    opacity:0;
+    transition:opacity 120ms ease;
+}
+
+:root{
+
+    --background:transparent;
+
+    --surface:transparent;
+
+    --card:transparent;
+
+    --border:transparent;
+
+    --text:inherit;
+
+    --text-secondary:inherit;
+
+    --accent:#888;
+
+    --accent-hover:#999;
+
+    --font-size: 14px;
+}
+
+html{
+    height:100%;
+}
+
+body{
+
+    margin:0;
+
+    background:var(--surface);
+}
+
+.markdown-body{
+
+    box-sizing:border-box;
+
+    min-width:200px;
+
+    max-width:1000px;
+
+    margin:auto;
+
+    padding:40px;
+}
+.markdown-body.document{
+    color: var(--text);
+    padding:32px;
+    font-size:calc(var(--font-size) + 4px);
+    line-height:1.7;
+}
+
+.markdown-body.question{
+
+    padding:12px 16px;
+    font-size:calc(var(--font-size) + 6px);
+    line-height:1.6;
+}
+
+.markdown-body.option{
+
+    padding:2px;
+    font-size:calc(var(--font-size) + 2px);
+    line-height:1.4;
+}
+
+.markdown-body.flashcard{
+
+    padding:20px;
+    font-size:calc(var(--font-size) + 4px);
+    line-height:1.6;
+}
+
+.markdown-body.feedback{
+
+    padding:12px;
+    font-size:calc(var(--font-size) + 2px);
+    line-height:1.5;
+}
+
+table{
+    color: var(--text);
+    border-collapse:collapse;
+}
+
+table th,
+table td{
+
+    border:1px solid var(--text);
+
+    padding:8px;
+}
+
+pre{
+
+    background:var(--background);
+
+    border:1px solid var(--border);
+
+    border-radius:10px;
+
+    padding:16px;
+
+    overflow-x:auto;
+
+    margin:18px 0;
+}
+
+pre code{
+
+    color:var(--text-secondary);
+
+    background:transparent;
+
+    font-family:"JetBrains Mono","Consolas","Fira Code",monospace;
+
+    font-size:calc(var(--font-size) + 1px);
+
+    line-height:1.6;
+}
+
+code:not(pre code){
+
+    background:var(--card);
+
+    color:var(--text);
+
+    padding:2px 6px;
+
+    border-radius:5px;
+
+    font-family:"JetBrains Mono","Consolas","Fira Code",monospace;
+}
+
+blockquote{
+
+    border-left:4px solid var(--border);
+
+    padding-left:15px;
+
+    color:var(--text-secondary);
+}
+a{
+    color: var(--accent);
+
+    background: transparent;
+
+    text-decoration: underline;
+
+    text-decoration-color: var(--text);
+
+    text-underline-offset:3px;
+
+    font-weight:600;
+}
+
+a:hover{
+
+    color: var(--accent-hover);
+}
+
+a:visited{
+
+    color:#5E7A65;
+}
+
+a:active{
+
+    color:var(--accent-hover);
+
+}
+img{
+
+    max-width:100%;
+}
+
+/* ==========================================
+   SCROLLBAR
+========================================== */
+
+::-webkit-scrollbar{
+
+    width:15px;
+
+    height:15px;
+
+}
+
+::-webkit-scrollbar-track{
+
+    background:transparent;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:var(--accent);
+
+    border-radius:5px;
+
+    border:2px solid transparent;
+
+    background-clip:padding-box;
+
+}
+
+::-webkit-scrollbar-thumb:hover{
+
+    background:var(--accent-hover);
+
+    background-clip:padding-box;
+
+}
+
+::-webkit-scrollbar-corner{
+
+    background:transparent;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<article
+id="content"
+class="markdown-body">
+</article>
+
+<script>
+
+if (typeof window.markdownit === "undefined") {
+    console.error("markdown-it failed to load");
+}
+
+const md = window.markdownit({
+    html: true,
+    breaks: true,
+    linkify: true,
+    typographer: true
+});
+
+function renderMarkdown(
+    markdown,
+    style,
+    scrollable
+)
+{
+    document.body.style.overflow =
+    scrollable ? "auto" : "hidden";
+    const content = document.getElementById("content");
+    content.className = "markdown-body " + style;
+    content.innerHTML = md.render(markdown);
+
+    function typeset(){
+
+        if(window.MathJax && MathJax.typesetPromise){
+
+            MathJax.typesetClear();
+
+            MathJax.typesetPromise([
+                document.getElementById("content")
+            ]);
+
+        }
+        else{
+
+            setTimeout(typeset,100);
+
+        }
+
+    }
+
+    typeset();
+    document.documentElement.style.opacity = "1";
+
+}
+</script>
+
+</body>
+
+</html>

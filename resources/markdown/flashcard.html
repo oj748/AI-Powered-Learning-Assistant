@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Flashcard Viewer</title>
+
+<!-- ============================= -->
+<!-- Markdown-It                   -->
+<!-- ============================= -->
+
+<script src="markdown-it.min.js"></script>
+
+<!-- ============================= -->
+<!-- MathJax                       -->
+<!-- ============================= -->
+
+<script>
+
+MathJax = {
+    tex:{
+        inlineMath:[['$','$'],['\\(','\\)']],
+        displayMath:[['$$','$$']]
+    },
+    startup:{
+        typeset:false
+    }
+};
+
+</script>
+
+<script async
+src="../mathjax/es5/tex-mml-chtml.js">
+</script>
+
+<style>
+
+    :root{
+
+    --background:#071824;
+
+    --surface:#0C1C25;
+
+    --card:#10222C;
+
+    --card-hover:#162D38;
+
+    --border:#1C3642;
+
+    --text:#E7EDF2;
+
+    --text-secondary:#AEBCC4;
+
+    --accent:#325766;
+
+    --accent-hover:#406977;
+
+    --font-size: 14px;
+}
+
+*{
+
+    box-sizing:border-box;
+
+}
+
+html,
+body{
+
+    margin:0;
+    padding:0;
+
+    width:100%;
+    height:100%;
+
+    overflow:hidden;
+
+    background: transparent;
+
+    font-family:
+        "Segoe UI",
+        sans-serif;
+}
+
+/* ================================================= */
+/* PAGE */
+/* ================================================= */
+
+#page{
+
+    width:100%;
+    height:100%;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:24px;
+}
+
+#cardContainer{
+
+    position:relative;
+
+    width:820px;
+
+    min-height:500px;
+
+}
+
+/* ================================================= */
+/* Flashcard */
+/* ================================================= */
+
+.card{
+
+    position:absolute;
+
+    width:820px;
+
+    min-height:500px;
+
+    background:var(--card);
+
+    border-radius:22px;
+
+    overflow:hidden;
+
+    display:flex;
+
+    flex-direction:column;
+
+    box-shadow:
+        0 10px 35px rgba(0,0,0,.12);
+
+    top:0;
+    left:0;
+
+}
+
+/* Accent strip */
+
+.accent{
+
+    height:5px;
+    transition: 0.5s ease;
+    background:var(--accent);
+
+}
+
+/* ================================================= */
+/* Card Content */
+/* ================================================= */
+
+.cardContent{
+
+    padding:34px;
+
+    flex:1;
+
+    display:flex;
+
+    flex-direction:column;
+}
+
+/* ================================================= */
+/* Question */
+/* ================================================= */
+
+.questionContainer{
+
+    flex:none;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    min-height:260px;
+
+    transition:
+        transform .45s cubic-bezier(.22,.61,.36,1),
+        min-height .45s ease;
+}
+
+.questionContainer.revealed{
+
+    min-height:90px;
+
+    align-items:flex-start;
+
+    transform:translateY(-10px);
+}
+
+.questionLabel{
+
+    display:none;
+
+    text-transform:uppercase;
+
+    letter-spacing:1px;
+
+    font-size: calc(var(--font-size) + 2px);
+
+    font-weight:bold;
+
+    color:var(--text);
+
+    margin-bottom:8px;
+}
+
+.questionContainer.revealed .questionLabel{
+
+    display:block;
+}
+
+.question{
+
+    width:100%;
+
+    text-align:center;
+
+    font-size: calc(var(--font-size) + 18px);
+
+    font-weight:600;
+
+    color:var(--text-secondary);
+
+    line-height:1.55;
+
+    transform:scale(1);
+
+    transition:
+
+        font-size .80s ease,
+
+        color .45s,
+
+        transform .45s ease,
+
+        text-align .80s ease;
+
+}
+
+.questionContainer.revealed .question{
+
+    text-align:left;
+
+    font-size: calc(var(--font-size) + 10px);
+
+
+    color:var(--text-secondary);
+
+    transform:scale(.95);
+
+}
+
+/* ================================================= */
+/* Divider */
+/* ================================================= */
+
+.divider{
+
+    height:1px;
+
+    background:var(--text);
+
+    margin:22px 0;
+
+    opacity:0;
+
+    transition:
+    opacity .35s ease .15s;
+}
+
+.divider.show{
+
+    opacity:1;
+}
+
+/* ================================================= */
+/* Answer */
+/* ================================================= */
+
+.answer{
+    color:var(--text);
+
+    max-height:0;
+
+    overflow:hidden;
+
+    opacity:0;
+
+    transform:translateY(20px);
+
+    transition:
+
+    opacity .35s ease .2s,
+
+    transform .35s ease .2s,
+
+    max-height .45s ease;
+}
+
+.answer.show{
+
+    max-height:2500px;
+
+    opacity:1;
+
+    transform:translateY(0);
+}
+
+.answer .markdown-body{
+
+    font-size: calc(var(--font-size) + 11px);
+
+    line-height:1.7;
+}
+
+/* ================================================= */
+/* Hint */
+/* ================================================= */
+
+.hint{
+
+    margin-top:30px;
+
+    text-align:center;
+
+    color:var(--accent);
+
+    font-size: var(--font-size);
+
+    opacity:1;
+
+    transform:translateY(0);
+
+    transition:
+        opacity .45s ease,
+        transform .45s ease;
+}
+
+.hint.hide{
+
+    opacity:0;
+
+    transform:translateY(8px);
+
+}
+
+/* ================================================= */
+/* Hover */
+/* ================================================= */
+
+.card.clickable{
+
+    cursor:pointer;
+}
+
+.card.clickable:hover{
+
+    transform:
+        translateY(-3px);
+
+    box-shadow:
+        0 14px 42px rgba(0,0,0,.16);
+}
+
+.card.revealed{
+
+    cursor:default;
+
+}
+
+#cardB{
+    display:none;
+}
+
+/* ================================================= */
+/* Markdown */
+/* ================================================= */
+
+.markdown-body{
+
+    line-height:1.65;
+}
+
+.markdown-body p:first-child{
+
+    margin-top:0;
+}
+
+.markdown-body p:last-child{
+
+    margin-bottom:0;
+}
+
+.markdown-body img{
+
+    max-width:100%;
+}
+
+.markdown-body table{
+
+    border-collapse:collapse;
+}
+
+.markdown-body td,
+.markdown-body th{
+
+    border:1px solid var(--text);
+
+    padding:8px;
+}
+
+.markdown-body code{
+
+    font-family:Consolas, monospace;
+}
+
+.markdown-body pre{
+
+    background:var(--background);
+
+    padding:14px;
+
+    border-radius:8px;
+
+    overflow:auto;
+}
+
+mjx-merror{
+
+    background: transparent !important;
+
+    border: none !important;
+
+    color: inherit !important;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="page">
+
+    <div id="cardContainer">
+
+        <div
+            id="cardA"
+            class="card clickable active">
+
+            <div class="accent"></div>
+
+            <div class="cardContent">
+
+                <div class="questionContainer">
+
+                    <div class="questionLabel">
+                        Question
+                    </div>
+
+                    <div class="question"></div>
+
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="answer"></div>
+
+                <div class="hint">
+                    Click anywhere on the card to reveal the answer
+                </div>
+
+            </div>
+
+        </div>
+
+        <div
+            id="cardB"
+            class="card clickable">
+
+            <div class="accent"></div>
+
+            <div class="cardContent">
+
+                <div class="questionContainer">
+
+                    <div class="questionLabel">
+                        Question
+                    </div>
+
+                    <div class="question"></div>
+
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="answer"></div>
+
+                <div class="hint">
+                    Click anywhere on the card to reveal the answer
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+
+<script>
+
+const md = markdownit({
+
+    html:true,
+
+    breaks:true,
+
+    linkify:true,
+
+    typographer:true
+
+});
+
+let revealed = false;
+
+let currentQuestion = "";
+
+let currentAnswer = "";
+
+let bridge = null;
+
+let currentCard =
+    document.getElementById("cardA");
+
+let nextCard =
+    document.getElementById("cardB");
+
+console.log("qwebchannel loaded:", typeof QWebChannel);
+/* =======================================================
+   Render Flashcard
+======================================================= */
+function populateCard(card, question, answer) {
+
+    card.querySelector(".question").innerHTML =
+        md.render(question);
+
+    card.querySelector(".answer").innerHTML =
+        `<div class="markdown-body">${md.render(answer)}</div>`;
+
+    card.querySelector(".questionContainer")
+        .classList.remove("revealed");
+
+    card.querySelector(".divider")
+        .classList.remove("show");
+
+    card.querySelector(".answer")
+        .classList.remove("show");
+
+    card.querySelector(".hint")
+        .classList.remove("hide");
+
+    card.classList.add("clickable");
+    card.classList.remove("revealed");
+}
+
+async function loadFlashcard(question, answer) {
+
+    currentQuestion = question;
+    currentAnswer = answer;
+    revealed = false;
+    // Prepare the hidden card first
+    populateCard(nextCard, question, answer);
+
+    await renderMath();
+
+    // Place hidden card to the right
+    nextCard.style.transform = "translateX(100px)";
+    nextCard.style.opacity = "0";
+
+    // Slide current card out
+    await currentCard.animate(
+        [
+            {
+                transform: "translateX(0px)",
+                opacity: 1
+            },
+            {
+                transform: "translateX(-100px)",
+                opacity: 0
+            }
+        ],
+        {
+            duration: 180,
+            easing: "ease-in",
+            fill: "forwards"
+        }
+    ).finished;
+
+    // Hide old card
+    currentCard.style.display = "none";
+
+    // Show new card
+    nextCard.style.display = "flex";
+
+    await nextCard.animate(
+        [
+            {
+                transform: "translateX(100px)",
+                opacity: 0
+            },
+            {
+                transform: "translateX(0px)",
+                opacity: 1
+            }
+        ],
+        {
+            duration: 240,
+            easing: "cubic-bezier(.22,.61,.36,1)",
+            fill: "forwards"
+        }
+    ).finished;
+
+    nextCard.style.transform = "";
+    nextCard.style.opacity = "";
+
+    // Swap references
+    [currentCard, nextCard] = [nextCard, currentCard];
+
+    // Reset the hidden card for next time
+    nextCard.style.display = "none";
+    nextCard.style.opacity = "";
+    nextCard.style.transform = "";
+    nextCard.style.height = "";
+
+    nextCard.classList.remove("revealed");
+    nextCard.classList.add("clickable");
+
+    nextCard.querySelector(".questionContainer")
+        .classList.remove("revealed");
+
+    nextCard.querySelector(".divider")
+        .classList.remove("show");
+
+    nextCard.querySelector(".answer")
+        .classList.remove("show");
+
+    nextCard.querySelector(".hint")
+        .classList.remove("hide");
+}
+
+/* =======================================================
+   Reveal Answer
+======================================================= */
+
+async function revealAnswer(){
+
+    if(revealed)
+        return;
+
+    revealed = true;
+
+    const card = currentCard;
+
+    card.classList.remove("clickable");
+
+    const questionContainer =
+        card.querySelector(".questionContainer");
+
+    const divider =
+        card.querySelector(".divider");
+
+    const answer =
+        card.querySelector(".answer");
+
+    const hint =
+        card.querySelector(".hint");
+
+    // Freeze current height
+    card.style.height = card.offsetHeight + "px";
+
+    card.style.transform = "scale(.985)";
+
+    questionContainer.classList.add("revealed");
+
+    divider.classList.add("show");
+
+    answer.classList.add("show");
+
+    hint.classList.add("hide");
+
+    requestAnimationFrame(() => {
+
+        card.style.height =
+            card.scrollHeight + "px";
+
+    });
+
+    await renderMath();
+
+    card.style.height =
+        card.scrollHeight + "px";
+
+    card.addEventListener(
+        "transitionend",
+        function handler(e){
+
+            if(e.propertyName === "height"){
+
+                card.style.height = "";
+
+                card.removeEventListener(
+                    "transitionend",
+                    handler
+                );
+
+            }
+
+        }
+    );
+
+    requestAnimationFrame(() => {
+
+        card.style.transform = "scale(1)";
+
+        card.classList.add("revealed");
+
+        if(bridge){
+
+            bridge.revealFinished();
+
+        }
+
+    });
+
+}
+
+/* =======================================================
+   Reset
+======================================================= */
+
+function resetCard(){
+
+    revealed = false;
+
+    currentCard.classList.remove("revealed");
+
+    currentCard.classList.add("clickable");
+
+    currentCard.querySelector(".questionContainer")
+        .classList.remove("revealed");
+
+    currentCard.querySelector(".divider")
+        .classList.remove("show");
+
+    currentCard.querySelector(".answer")
+        .classList.remove("show");
+
+    currentCard.querySelector(".hint")
+        .classList.remove("hide");
+
+}
+
+
+/* =======================================================
+   MathJax
+======================================================= */
+
+async function renderMath(){
+
+    if(window.MathJax &&
+       MathJax.typesetPromise){
+
+        MathJax.typesetClear();
+
+        await MathJax.typesetPromise();
+         document.querySelectorAll("mjx-merror").forEach(err => {
+        err.textContent = "";
+    });
+
+    }
+
+}
+/* =======================================================
+   Card Click
+======================================================= */
+document.querySelectorAll(".card").forEach(card => {
+
+    card.addEventListener("click", () => {
+
+        if(!revealed){
+
+            revealAnswer();
+
+        }
+
+    });
+
+});
+/* =======================================================
+   Utility
+======================================================= */
+
+function isRevealed(){
+
+    return revealed;
+
+}
+// ======================================
+// Qt WebChannel
+// ======================================
+document.addEventListener("DOMContentLoaded", () => {
+
+    console.log("DOM loaded");
+
+    if (typeof qt === "undefined") {
+
+        console.log("qt is undefined");
+        return;
+
+    }
+
+    console.log("Creating channel...");
+
+    new QWebChannel(qt.webChannelTransport, function(channel) {
+
+        console.log("Channel created");
+
+        bridge = channel.objects.bridge;
+
+        console.log("Bridge:", bridge);
+
+    });
+
+});
+
+</script>
+
+</body>
+
+</html>
